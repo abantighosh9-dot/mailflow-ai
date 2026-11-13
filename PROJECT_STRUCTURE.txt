@@ -1,0 +1,17 @@
+mailflow-ai/
+  src/
+    components/       Reusable sidebar, layout, Google login and stat cards
+    lib/              API client
+    pages/            Authentication, dashboard, AI studio and menu pages
+    state/            Authentication context
+    App.jsx           Routes and protected page wrapper
+    main.jsx          React entry point
+    styles.css        Complete responsive UI styling
+  netlify/functions/
+    api.mjs           Express API: auth, Google token verification, AI generation, templates
+  prisma/
+    schema.prisma     PostgreSQL data models
+    seed.js           Local demo account seed
+  netlify.toml        Netlify build, function and SPA routing configuration
+  .env.example       Required environment variables
+  README.md           Full setup and deployment guide

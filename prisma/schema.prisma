@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum WorkspaceRole { OWNER ADMIN EDITOR ANALYST VIEWER }
+enum ContactStatus { SUBSCRIBED UNSUBSCRIBED BOUNCED COMPLAINED }
+enum CampaignStatus { DRAFT SCHEDULED QUEUED SENDING SENT PAUSED FAILED }
+
+model User {
+  id           String @id @default(cuid())
+  name         String
+  email        String @unique
+  passwordHash String?
+  googleSub    String? @unique
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  memberships  WorkspaceMember[]
+}
+
+model Workspace {
+  id        String @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  members   WorkspaceMember[]
+  contacts  Contact[]
+  campaigns Campaign[]
+  templates EmailTemplate[]
+  workflows Workflow[]
+}
+
+model WorkspaceMember {
+  id          String @id @default(cuid())
+  userId      String
+  workspaceId String
+  role        WorkspaceRole @default(OWNER)
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  @@unique([userId, workspaceId])
+  @@index([workspaceId])
+}
+
+model Contact {
+  id          String @id @default(cuid())
+  workspaceId String
+  email       String
+  firstName   String?
+  lastName    String?
+  company     String?
+  status      ContactStatus @default(SUBSCRIBED)
+  tags        String[] @default([])
+  consentAt   DateTime?
+  createdAt   DateTime @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  @@unique([workspaceId, email])
+  @@index([workspaceId, status])
+}
+
+model EmailTemplate {
+  id          String @id @default(cuid())
+  workspaceId String
+  name        String
+  subject     String
+  previewText String?
+  content     Json
+  html        String
+  createdAt   DateTime @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  @@index([workspaceId])
+}
+
+model Campaign {
+  id          String @id @default(cuid())
+  workspaceId String
+  name        String
+  subject     String
+  previewText String?
+  html        String
+  status      CampaignStatus @default(DRAFT)
+  scheduledAt DateTime?
+  createdAt   DateTime @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  @@index([workspaceId, status])
+}
+
+model Workflow {
+  id          String @id @default(cuid())
+  workspaceId String
+  name        String
+  definition  Json
+  active      Boolean @default(false)
+  createdAt   DateTime @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  @@index([workspaceId])
+}

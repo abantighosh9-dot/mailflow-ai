@@ -1,0 +1,42 @@
+{
+  "name": "mailflow-ai",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:netlify": "netlify dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@netlify/functions": "^3.1.10",
+    "@prisma/client": "^6.19.0",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "google-auth-library": "^10.5.0",
+    "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.468.0",
+    "openai": "^6.15.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-google-button": "^0.8.0",
+    "react-router-dom": "^7.9.5",
+    "recharts": "^3.4.1",
+    "serverless-http": "^3.2.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.1",
+    "autoprefixer": "^10.4.22",
+    "netlify-cli": "^23.11.0",
+    "postcss": "^8.5.6",
+    "prisma": "^6.19.0",
+    "tailwindcss": "^3.4.18",
+    "vite": "^7.2.2"
+  }
+}
