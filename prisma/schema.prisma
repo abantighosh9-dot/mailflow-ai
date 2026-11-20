@@ -3,65 +3,144 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-enum WorkspaceRole { OWNER ADMIN EDITOR ANALYST VIEWER }
-enum ContactStatus { SUBSCRIBED UNSUBSCRIBED BOUNCED COMPLAINED }
-enum CampaignStatus { DRAFT SCHEDULED QUEUED SENDING SENT PAUSED FAILED }
+// ==========================================
+// ENUMS
+// ==========================================
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  EDITOR
+  ANALYST
+  VIEWER
+}
+
+enum ContactStatus {
+  SUBSCRIBED
+  UNSUBSCRIBED
+  BOUNCED
+  COMPLAINED
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  QUEUED
+  SENDING
+  SENT
+  PAUSED
+  CANCELLED
+  FAILED
+}
+
+enum RecipientStatus {
+  PENDING
+  SENT
+  DELIVERED
+  BOUNCED
+  COMPLAINED
+  FAILED
+}
+
+// ==========================================
+// USER MODEL
+// ==========================================
 
 model User {
-  id           String @id @default(cuid())
+  id           String   @id @default(cuid())
   name         String
-  email        String @unique
+  email        String   @unique
   passwordHash String?
-  googleSub    String? @unique
+  googleSub    String?  @unique
   avatarUrl    String?
   createdAt    DateTime @default(now())
-  memberships  WorkspaceMember[]
+
+  memberships WorkspaceMember[]
+  campaigns   Campaign[]
 }
 
+// ==========================================
+// LOGIN ATTEMPT MODEL (THROTTLING)
+// ==========================================
+
+model LoginAttempt {
+  id          String    @id @default(cuid())
+  key         String    @unique
+  attempts    Int       @default(1)
+  lockedUntil DateTime?
+  updatedAt   DateTime  @updatedAt
+}
+
+// ==========================================
+// WORKSPACE MODEL
+// ==========================================
+
 model Workspace {
-  id        String @id @default(cuid())
+  id        String   @id @default(cuid())
   name      String
   createdAt DateTime @default(now())
+
   members   WorkspaceMember[]
   contacts  Contact[]
   campaigns Campaign[]
   templates EmailTemplate[]
   workflows Workflow[]
+  brandVoice BrandVoice?
 }
 
+// ==========================================
+// WORKSPACE MEMBER MODEL
+// ==========================================
+
 model WorkspaceMember {
-  id          String @id @default(cuid())
+  id          String        @id @default(cuid())
   userId      String
   workspaceId String
   role        WorkspaceRole @default(OWNER)
-  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
   @@unique([userId, workspaceId])
   @@index([workspaceId])
 }
 
+// ==========================================
+// CONTACT MODEL
+// ==========================================
+
 model Contact {
-  id          String @id @default(cuid())
+  id          String        @id @default(cuid())
   workspaceId String
   email       String
   firstName   String?
   lastName    String?
   company     String?
   status      ContactStatus @default(SUBSCRIBED)
-  tags        String[] @default([])
+  tags        String[]      @default([])
+  source      String        @default("manual")
   consentAt   DateTime?
-  createdAt   DateTime @default(now())
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  unsubscribedAt DateTime?
+  createdAt   DateTime      @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  campaignRecipients CampaignRecipient[]
+
   @@unique([workspaceId, email])
   @@index([workspaceId, status])
 }
 
+// ==========================================
+// EMAIL TEMPLATE MODEL
+// ==========================================
+
 model EmailTemplate {
-  id          String @id @default(cuid())
+  id          String   @id @default(cuid())
   workspaceId String
   name        String
   subject     String
@@ -69,31 +148,149 @@ model EmailTemplate {
   content     Json
   html        String
   createdAt   DateTime @default(now())
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  campaigns Campaign[]
+
   @@index([workspaceId])
 }
 
+// ==========================================
+// CAMPAIGN MODEL
+// ==========================================
+
 model Campaign {
-  id          String @id @default(cuid())
+  id          String         @id @default(cuid())
   workspaceId String
+  createdById String?
+  templateId  String?
+
   name        String
+  description String?
   subject     String
   previewText String?
+  fromName    String?
+  fromEmail   String?
   html        String
+
+  // Audience targeting: filter contacts by tags and/or status
+  targetTags   String[]  @default([])
+  targetStatus String?
+
   status      CampaignStatus @default(DRAFT)
   scheduledAt DateTime?
-  createdAt   DateTime @default(now())
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  sentAt      DateTime?
+  completedAt DateTime?
+  lockedAt    DateTime?
+
+  // Sending progress counters
+  sendTotal       Int @default(0)
+  sendSucceeded   Int @default(0)
+  sendFailed      Int @default(0)
+  deliveredCount  Int @default(0)
+  bouncedCount    Int @default(0)
+  openedCount     Int @default(0)
+  clickedCount    Int @default(0)
+  complainedCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace  Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy  User?              @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  template   EmailTemplate?     @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  recipients CampaignRecipient[]
+
   @@index([workspaceId, status])
+  @@index([createdById])
 }
 
+// ==========================================
+// CAMPAIGN RECIPIENT MODEL
+// ==========================================
+
+model CampaignRecipient {
+  id         String          @id @default(cuid())
+  campaignId String
+  contactId  String
+  email      String
+
+  status     RecipientStatus @default(PENDING)
+  messageId  String?
+  sentAt     DateTime?
+  openedAt   DateTime?
+  clickedAt  DateTime?
+  bouncedAt     DateTime?
+  error         String?
+  attempts      Int             @default(0)
+  lastAttemptAt DateTime?
+  uncertain     Boolean         @default(false)
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  contact  Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, contactId])
+  @@index([campaignId, status])
+  @@index([contactId])
+  @@index([messageId])
+}
+
+// ==========================================
+// DELIVERY EVENT MODEL (WEBHOOK AUDIT & DEDUPE)
+// ==========================================
+
+model DeliveryEvent {
+  id        String   @id @default(cuid())
+  eventId   String   @unique
+  messageId String?
+  event     String
+  email     String?
+  payload   Json?
+  createdAt DateTime @default(now())
+
+  @@index([messageId])
+}
+
+// ==========================================
+// WORKFLOW MODEL
+// ==========================================
+
 model Workflow {
-  id          String @id @default(cuid())
+  id          String   @id @default(cuid())
   workspaceId String
   name        String
   definition  Json
-  active      Boolean @default(false)
+  active      Boolean  @default(false)
   createdAt   DateTime @default(now())
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
   @@index([workspaceId])
 }
+
+// ==========================================
+// BRAND VOICE MODEL
+// ==========================================
+
+model BrandVoice {
+  id                  String   @id @default(cuid())
+  workspaceId         String   @unique
+  brandName           String   @default("")
+  businessDescription String?  @default("")
+  industry            String?  @default("")
+  targetAudience      String?  @default("")
+  preferredTone       String?  @default("Professional")
+  brandPersonality    String?  @default("")
+  preferredVocabulary String[] @default([])
+  prohibitedPhrases   String[] @default([])
+  styleGuidelines     String?  @default("")
+  defaultLanguage     String   @default("English")
+  websiteUrl          String?  @default("")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+}
+

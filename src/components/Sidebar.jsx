@@ -1,13 +1,15 @@
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard, Users, Send, Palette, Workflow, BrainCircuit,
-  ChartNoAxesCombined, ShieldCheck, Plug, UsersRound, CreditCard, Settings, Mail
+  ChartNoAxesCombined, ShieldCheck, Plug, UsersRound, CreditCard, Settings, Mail,
+  LayoutTemplate
 } from "lucide-react";
 const groups = [
   ["Workspace", [
     ["/app","Dashboard",LayoutDashboard],
     ["/app/audience","Audience",Users],
     ["/app/campaigns","Campaigns",Send],
+    ["/app/templates","Templates",LayoutTemplate],
     ["/app/studio","Email Studio",Palette],
     ["/app/automation","Automation",Workflow],
     ["/app/assistant","AI Assistant",BrainCircuit],

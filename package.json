@@ -4,9 +4,13 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "dev:netlify": "netlify dev",
+    "dev": "node dev.js",
+    "dev:vite": "vite",
+    "dev:server": "node server.js",
+    "dev:netlify": "netlify dev --port 8888",
     "build": "vite build",
+    "test": "vitest run --configLoader native",
+    "postinstall": "prisma generate",
     "preview": "vite preview",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
@@ -14,7 +18,7 @@
   },
   "dependencies": {
     "@netlify/functions": "^3.1.10",
-    "@prisma/client": "^6.19.0",
+    "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "express": "^5.1.0",
@@ -35,8 +39,9 @@
     "autoprefixer": "^10.4.22",
     "netlify-cli": "^23.11.0",
     "postcss": "^8.5.6",
-    "prisma": "^6.19.0",
+    "prisma": "^6.19.3",
     "tailwindcss": "^3.4.18",
-    "vite": "^7.2.2"
+    "vite": "^7.2.2",
+    "vitest": "^5.1.0"
   }
 }

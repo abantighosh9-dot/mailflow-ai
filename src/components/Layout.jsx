@@ -4,6 +4,7 @@ import Sidebar from "./Sidebar";
 import { useAuth } from "../state/AuthContext";
 const titles = {
   "/app":"Dashboard","/app/audience":"Audience","/app/campaigns":"Campaigns",
+  "/app/templates":"Email Templates",
   "/app/studio":"Email Studio","/app/automation":"Automation","/app/assistant":"AI Assistant",
   "/app/analytics":"Analytics & Reports","/app/deliverability":"Deliverability",
   "/app/integrations":"Integrations","/app/team":"Team Management",
