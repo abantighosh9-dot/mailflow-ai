@@ -2,6 +2,7 @@
 import express from "express";
 import { prisma } from "../_lib/db.mjs";
 import { auth as requireAuth, requireRole, checkLoginThrottle } from "../_lib/auth.mjs";
+import { triggerWorkflowsForContact } from "../_lib/workflow-runner.mjs";
 import { z } from "zod";
 
 const router = express.Router();
@@ -162,8 +163,19 @@ router.post("/contacts/bulk", requireAuth, requireRole("OWNER", "ADMIN", "EDITOR
           return res.status(400).json({ error: "tag required and must be non‑empty string" });
         }
         {
+          const cleanTag = tag.trim().toLowerCase();
           const selected = await prisma.contact.findMany({ where: { id: { in: ids }, workspaceId }, select: { id: true, tags: true } });
-          for (const contact of selected) if (!contact.tags.includes(tag.trim().toLowerCase())) await prisma.contact.updateMany({ where: { id: contact.id, workspaceId }, data: { tags: [...contact.tags, tag.trim().toLowerCase()] } });
+          for (const contact of selected) {
+            if (!contact.tags.includes(cleanTag)) {
+              await prisma.contact.updateMany({ where: { id: contact.id, workspaceId }, data: { tags: [...contact.tags, cleanTag] } });
+              triggerWorkflowsForContact({
+                workspaceId,
+                contactId: contact.id,
+                event: "TAG_ADDED",
+                data: { tag: cleanTag }
+              }).catch(e => console.error("Workflow bulk tag trigger error:", e));
+            }
+          }
           affected = selected.length;
         }
         break;
@@ -230,6 +242,25 @@ router.post("/contacts", requireAuth, requireRole("OWNER", "ADMIN", "EDITOR"), a
         consentAt: new Date()
       }
     });
+
+    // Fire automated workflow triggers asynchronously
+    triggerWorkflowsForContact({
+      workspaceId,
+      contactId: contact.id,
+      event: "CONTACT_SUBSCRIBED"
+    }).catch(e => console.error("Workflow trigger error:", e));
+
+    if (Array.isArray(contact.tags) && contact.tags.length > 0) {
+      for (const tag of contact.tags) {
+        triggerWorkflowsForContact({
+          workspaceId,
+          contactId: contact.id,
+          event: "TAG_ADDED",
+          data: { tag }
+        }).catch(e => console.error("Workflow tag trigger error:", e));
+      }
+    }
+
     res.status(201).json(contact);
   } catch (e) {
     if (e.code === "P2002") {
@@ -267,6 +298,21 @@ router.patch("/contacts/:id", requireAuth, requireRole("OWNER", "ADMIN", "EDITOR
   try {
     await prisma.contact.updateMany({ where: { id, workspaceId }, data });
     const updated = await prisma.contact.findFirst({ where: { id, workspaceId } });
+
+    // Trigger workflows for newly added tags
+    if (Array.isArray(data.tags)) {
+      const currentTags = current.tags || [];
+      const addedTags = data.tags.filter(t => !currentTags.includes(t));
+      for (const t of addedTags) {
+        triggerWorkflowsForContact({
+          workspaceId,
+          contactId: id,
+          event: "TAG_ADDED",
+          data: { tag: t }
+        }).catch(e => console.error("Workflow tag trigger error:", e));
+      }
+    }
+
     res.json(updated);
   } catch (e) {
     console.error("PATCH /contacts/:id failed", e);

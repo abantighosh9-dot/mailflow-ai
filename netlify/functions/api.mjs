@@ -11,6 +11,8 @@ import campaignsRoutes from "./routes/campaigns.mjs";
 import unsubscribeRoutes from "./routes/unsubscribe.mjs";
 import webhooksRoutes from "./routes/webhooks.mjs";
 import analyticsRoutes from "./routes/analytics.mjs";
+import workflowsRoutes from "./routes/workflows.mjs";
+import deliverabilityRoutes from "./routes/deliverability.mjs";
 
 const app = express();
 const router = express.Router();
@@ -68,6 +70,8 @@ router.use(campaignsRoutes);
 router.use(unsubscribeRoutes);
 router.use(webhooksRoutes);
 router.use(analyticsRoutes);
+router.use(workflowsRoutes);
+router.use(deliverabilityRoutes);
 
 // Route handlers for Netlify function redirects and direct calls
 app.use(["/.netlify/functions/api", "/api", "/"], router);

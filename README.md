@@ -71,7 +71,22 @@ You can run only the frontend with `npm run dev`, but the API/auth routes requir
 ## 6. AI email generator
 Add a valid `OPENAI_API_KEY` and a model available to your API account. The backend returns structured JSON and renders escaped HTML. Review and test the email in real email clients before sending.
 
-## 7. Deploy to Netlify
+## 7. Automation & Drip Workflows
+MailFlow AI includes an automated drip sequence engine:
+- **Triggers**: Contact subscription (`CONTACT_SUBSCRIBED`) and tag assignment (`TAG_ADDED`).
+- **Steps**: Marketing email dispatch, wait/delay intervals (minutes, hours, days), and condition checks.
+- **Engine**: Runs every minute via Netlify Scheduled Functions (`scheduled-campaigns.mjs`), utilizing optimistic concurrency locks (`lockedAt`), duplicate execution prevention, and automatic suppression guards (unsubscribed or bounced contacts are cancelled and never sent marketing copy).
+- **Builder**: Visual sequence pipeline in `/app/automation` with drag-and-drop / reordering, execution timeline simulation, and enrollment monitoring.
+
+## 8. Deliverability & DNS Domain Authentication
+MailFlow AI provides complete domain authentication and deliverability tooling (`/app/deliverability`):
+- **DNS Authentication Engine**: Automatic generation and live verification of SPF (`v=spf1 include:spf.brevo.com ~all`), DKIM (`mailo._domainkey` public key), DMARC policy (`v=DMARC1; p=...`), and custom CNAME tracking links.
+- **SSRF Defense**: Strict validation of domain hostnames rejecting private IPs, loopback sockets, and internal TLDs.
+- **Domain Health Score**: Composite reputation metric (0-100) factoring in DNS verification status, bounce rate penalties (> 5%), and spam complaint penalties (> 0.1%).
+- **Registrar Setup Guides**: Tailored instructions with 1-click copy for Cloudflare, GoDaddy, Namecheap, and AWS Route 53.
+- **Pre-Send Email Spam Score Analyzer**: Real-time content analyzer scoring draft subjects, HTML markup, promotional trigger words, excessive capitalization/punctuation, missing unsubscribe links, and suspicious URL shorteners.
+
+## 9. Deploy to Netlify
 1. Push the project to a private Git repository.
 2. Import the repository into Netlify.
 3. Build command: `npm run build`
@@ -83,16 +98,12 @@ Add a valid `OPENAI_API_KEY` and a model available to your API account. The back
 9. Run migrations against the production database from a trusted deployment workflow, not from every serverless invocation.
 
 ## Important production work still required
-This starter intentionally does not claim that all 12 modules are production complete. Before company launch, add:
+Before public production launch, the following remaining modules can be expanded:
 - Password reset and verified-email flows.
-- CSRF protection and stricter origin validation for cookie-authenticated mutations.
-- Workspace selection and per-request membership authorization (the starter uses the first membership).
-- Contact CRUD/import/export endpoints and UI.
-- Campaign persistence, provider sending, suppression checks and signed provider webhooks.
-- Persistent background queue/scheduler for campaigns and automation (do not run long jobs inside ordinary Netlify Functions).
-- Real analytics events; dashboard chart is clearly labelled illustrative.
-- Team invitations, roles enforcement, billing and audit logs.
-- Rate limiting, monitoring, database backups and security review.
+- Team invitations, workspace switching, and member role assignment (`/app/team`).
+- Stripe billing integration and subscription tier metering (`/app/billing`).
+- Interactive conversational AI assistant (`/app/assistant`).
+- Inbound/outbound webhook integrations for eCommerce platforms (`/app/integrations`).
 
 ## Notes
 The dashboard chart is demo illustration. No real marketing emails are sent by this starter. The AI-generated HTML contains a placeholder unsubscribe URL; replace it with a real per-recipient unsubscribe link before any marketing send.

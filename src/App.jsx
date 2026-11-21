@@ -9,6 +9,8 @@ import Campaigns from "./pages/Campaigns.jsx";
 import Analytics from "./pages/Analytics.jsx";
 import Templates from "./pages/Templates.jsx";
 import Settings from "./pages/Settings.jsx";
+import Automation from "./pages/Automation.jsx";
+import Deliverability from "./pages/Deliverability.jsx";
 
 function Placeholder({ type }) {
   return (
@@ -35,10 +37,10 @@ export default function App(){
    <Route path="audience" element={<Audience />}/>
    <Route path="campaigns" element={<Campaigns />}/>
    <Route path="templates" element={<Templates />}/>
-   <Route path="automation" element={<Placeholder type="automation"/>}/>
+   <Route path="automation" element={<Automation />}/>
    <Route path="assistant" element={<Placeholder type="assistant"/>}/>
    <Route path="analytics" element={<Analytics />}/>
-   <Route path="deliverability" element={<Placeholder type="deliverability"/>}/>
+   <Route path="deliverability" element={<Deliverability />}/>
    <Route path="integrations" element={<Placeholder type="integrations"/>}/>
    <Route path="team" element={<Placeholder type="team"/>}/>
    <Route path="billing" element={<Placeholder type="billing"/>}/>

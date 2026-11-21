@@ -1,4 +1,4 @@
-﻿node_modules/
+node_modules/
 dist/
 .env
 .env.local
@@ -6,6 +6,7 @@ dist/
 *.log
 .DS_Store
 coverage/
+.vscode/
 
 # Local Netlify folder
 .netlify

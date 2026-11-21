@@ -114,3 +114,108 @@ h1,h2,h3,h4{font-family:"Manrope",sans-serif;letter-spacing:-.035em;margin:0}p{m
   .optimizer-metrics-grid{grid-template-columns:repeat(2,1fr)}
   .optimizer-tabs{padding-bottom:6px}
 }
+
+/* =========================================================================
+   AUTOMATION & DRIP WORKFLOWS STYLING
+   ========================================================================= */
+.workflow-builder-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:#fff;border-bottom:1px solid #eceef4;border-radius:12px 12px 0 0}
+.workflow-pipeline{display:flex;flex-direction:column;align-items:center;gap:12px;padding:30px 20px;background:#f9fafe;border-radius:0 0 12px 12px;border:1px solid #eceef4;border-top:0}
+.workflow-node{width:100%;max-width:620px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;box-shadow:0 3px 12px rgba(31,41,55,.025);transition:border-color .2s,box-shadow .2s}
+.workflow-node:hover{border-color:#cfc4f3;box-shadow:0 6px 20px rgba(101,69,188,.06)}
+.workflow-node.trigger-node{border-left:4px solid #6545bc;background:#faf9ff}
+.workflow-node.email-node{border-left:4px solid #3b82f6}
+.workflow-node.delay-node{border-left:4px solid #f59e0b}
+.workflow-node.condition-node{border-left:4px solid #10b981}
+.workflow-connector{display:flex;flex-direction:column;align-items:center;height:28px;justify-content:center;color:#94a3b8}
+.workflow-connector-line{width:2px;height:100%;background:#cbd5e1}
+.step-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.step-type-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.05em}
+.step-badge-email{background:#eff6ff;color:#2563eb}
+.step-badge-delay{background:#fffbeb;color:#d97706}
+.step-badge-condition{background:#ecfdf5;color:#059669}
+.step-badge-trigger{background:#f3e8ff;color:#7e22ce}
+.add-step-bar{display:flex;align-items:center;gap:8px;padding:12px;background:#fff;border:1px dashed #cbd5e1;border-radius:10px}
+.workflow-preview-timeline{display:flex;flex-direction:column;gap:10px;margin-top:14px;padding:14px;background:#fafbfe;border:1px solid #eef2f6;border-radius:10px}
+.timeline-item{display:flex;align-items:flex-start;gap:12px;font-size:12px}
+.timeline-dot{width:10px;height:10px;border-radius:50%;background:#6545bc;margin-top:4px;flex-shrink:0}
+
+/* =========================================================================
+   DELIVERABILITY & DNS DOMAIN AUTHENTICATION STYLING
+   ========================================================================= */
+.deliverability-page{display:flex;flex-direction:column;gap:24px}
+.deliverability-grid{display:grid;grid-template-columns:360px 1fr;gap:20px}
+@media(max-width:960px){
+  .deliverability-grid{grid-template-columns:1fr}
+}
+
+.deliverability-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:22px;box-shadow:0 3px 12px rgba(31,41,55,.025)}
+.deliverability-card .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.deliverability-card .card-header h3{font-size:16px;font-weight:700;color:#1e293b;margin:0}
+
+.health-pill{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.05em}
+.health-healthy,.health-excellent{background:#ecfdf5;color:#059669;border:1px solid #a7f3d0}
+.health-good{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}
+.health-needs_attention{background:#fff1f2;color:#e11d48;border:1px solid #fecdd3}
+
+.score-gauge-container{display:flex;flex-direction:column;align-items:center;text-align:center;padding:10px 0}
+.radial-gauge{width:140px;height:140px;border-radius:50%;display:grid;place-items:center;position:relative;margin-bottom:14px;box-shadow:0 4px 12px rgba(0,0,0,.06)}
+.radial-gauge-inner{width:108px;height:108px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.gauge-number{font-size:32px;font-weight:800;color:#0f172a;line-height:1}
+.gauge-label{font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;margin-top:2px}
+.score-desc{font-size:12px;color:#475569;line-height:1.5;max-width:300px;margin:0}
+
+.rates-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.rate-box{background:#f8fafc;border:1px solid #eef2f6;border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:4px}
+.rate-title{font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.03em}
+.rate-value{font-size:24px;font-weight:800;line-height:1.2}
+.rate-hint{font-size:11px;color:#94a3b8}
+
+.deliverability-alert{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;border-radius:10px;font-size:13px;line-height:1.5}
+.alert-critical{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.alert-warning{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+
+.proto-pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase}
+.proto-verified{background:#dcfce7;color:#15803d}
+.proto-pending{background:#fef3c7;color:#b45309}
+.proto-invalid,.proto-failed,.proto-missing{background:#fee2e2;color:#b91c1c}
+
+.health-badge{display:inline-block;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;color:#fff}
+.domain-name-cell{display:flex;flex-direction:column}
+.domain-subtext{font-size:11px;color:#94a3b8}
+
+.spam-analyzer-layout{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:16px}
+@media(max-width:900px){
+  .spam-analyzer-layout{grid-template-columns:1fr}
+}
+.analyzer-form-col{display:flex;flex-direction:column}
+.analyzer-results-col{display:flex;flex-direction:column}
+.analysis-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+.analysis-score-badge{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;font-size:20px;font-weight:800;color:#fff}
+.risk-tag{display:inline-block;font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;text-transform:uppercase}
+.risk-low{background:#dcfce7;color:#15803d}
+.risk-medium{background:#fef3c7;color:#b45309}
+.risk-high{background:#fee2e2;color:#b91c1c}
+.analysis-summary{font-size:13px;color:#475569;line-height:1.5}
+.issues-list,.suggestions-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.issue-item{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px}
+.severity-badge{font-size:9px;font-weight:800;padding:2px 5px;border-radius:4px;text-transform:uppercase}
+.severity-critical{background:#fef2f2;border-left:3px solid #ef4444}
+.severity-critical .severity-badge{background:#fee2e2;color:#b91c1c}
+.severity-warning{background:#fffbeb;border-left:3px solid #f59e0b}
+.severity-warning .severity-badge{background:#fef3c7;color:#b45309}
+.severity-info{background:#f8fafc;border-left:3px solid #64748b}
+.severity-info .severity-badge{background:#e2e8f0;color:#475569}
+.suggestion-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#334155;background:#f8fafc;padding:8px 12px;border-radius:8px}
+.analysis-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;background:#fafbfe;border:2px dashed #cbd5e1;border-radius:12px;color:#64748b;min-height:280px}
+
+.dns-code{background:#f1f5f9;color:#0f172a;font-family:monospace;font-size:12px;padding:3px 6px;border-radius:4px}
+.dns-code-long{display:block;max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#f1f5f9;color:#0f172a;font-family:monospace;font-size:11px;padding:4px 6px;border-radius:4px}
+.dns-value-wrap{display:flex;align-items:center;gap:6px}
+.btn-copy-small{background:none;border:none;color:#64748b;cursor:pointer;padding:3px;display:grid;place-items:center;border-radius:4px}
+.btn-copy-small:hover{background:#e2e8f0;color:#0f172a}
+.record-type-pill{font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;background:#ede9fe;color:#6545bc;margin-right:6px}
+.record-purpose-text{font-size:11px;font-weight:600;color:#475569}
+.registrar-guide-section{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px}
+.instruction-steps{padding-left:18px;margin:8px 0;font-size:12px;color:#334155;line-height:1.7}
+.provider-note{display:flex;align-items:flex-start;gap:8px;font-size:11px;color:#64748b;background:#eff6ff;padding:8px 12px;border-radius:6px;border-left:3px solid #3b82f6}
+

@@ -47,6 +47,65 @@ enum RecipientStatus {
   FAILED
 }
 
+enum WorkflowTriggerType {
+  CONTACT_SUBSCRIBED
+  TAG_ADDED
+}
+
+enum WorkflowStepType {
+  EMAIL
+  DELAY
+  CONDITION
+}
+
+enum WorkflowEnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+  FAILED
+  CANCELLED
+}
+
+enum WorkflowExecutionStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  SKIPPED
+}
+
+enum DomainStatus {
+  PENDING
+  VERIFIED
+  FAILED
+}
+
+enum DnsRecordType {
+  TXT
+  CNAME
+  MX
+}
+
+enum DnsRecordStatus {
+  VERIFIED
+  MISSING
+  INVALID
+  PENDING
+}
+
+enum DnsRecordPurpose {
+  SPF
+  DKIM
+  DMARC
+  TRACKING
+}
+
+enum DeliverabilityRiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 // ==========================================
 // USER MODEL
 // ==========================================
@@ -62,6 +121,7 @@ model User {
 
   memberships WorkspaceMember[]
   campaigns   Campaign[]
+  workflows   Workflow[]
 }
 
 // ==========================================
@@ -91,6 +151,8 @@ model Workspace {
   templates EmailTemplate[]
   workflows Workflow[]
   brandVoice BrandVoice?
+  sendingDomains SendingDomain[]
+  deliverabilityChecks DeliverabilityCheck[]
 }
 
 // ==========================================
@@ -130,6 +192,7 @@ model Contact {
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   campaignRecipients CampaignRecipient[]
+  workflowEnrollments WorkflowEnrollment[]
 
   @@unique([workspaceId, email])
   @@index([workspaceId, status])
@@ -200,6 +263,7 @@ model Campaign {
   createdBy  User?              @relation(fields: [createdById], references: [id], onDelete: SetNull)
   template   EmailTemplate?     @relation(fields: [templateId], references: [id], onDelete: SetNull)
   recipients CampaignRecipient[]
+  deliverabilityChecks DeliverabilityCheck[]
 
   @@index([workspaceId, status])
   @@index([createdById])
@@ -252,20 +316,90 @@ model DeliveryEvent {
 }
 
 // ==========================================
-// WORKFLOW MODEL
+// WORKFLOW MODELS (AUTOMATION & DRIP SEQUENCES)
 // ==========================================
 
 model Workflow {
-  id          String   @id @default(cuid())
-  workspaceId String
-  name        String
-  definition  Json
-  active      Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id            String              @id @default(cuid())
+  workspaceId   String
+  createdById   String?
+  name          String
+  description   String?
+  type          String              @default("DRIP")
+  triggerType   WorkflowTriggerType @default(CONTACT_SUBSCRIBED)
+  triggerConfig Json?               @default("{}")
+  definition    Json?               @default("{}")
+  active        Boolean             @default(false)
+  startDate     DateTime?
+  endDate       DateTime?
+  lockedAt      DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace     Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy     User?               @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  steps         WorkflowStep[]
+  enrollments   WorkflowEnrollment[]
 
-  @@index([workspaceId])
+  @@index([workspaceId, active])
+  @@index([createdById])
+}
+
+model WorkflowStep {
+  id          String              @id @default(cuid())
+  workflowId  String
+  stepOrder   Int                 @default(0)
+  type        WorkflowStepType    @default(EMAIL)
+  name        String?
+  config      Json                @default("{}")
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  workflow    Workflow            @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  executions  WorkflowExecution[]
+
+  @@unique([workflowId, stepOrder])
+  @@index([workflowId])
+}
+
+model WorkflowEnrollment {
+  id              String                   @id @default(cuid())
+  workflowId      String
+  contactId       String
+  status          WorkflowEnrollmentStatus @default(ACTIVE)
+  currentStepId   String?
+  nextExecutionAt DateTime                 @default(now())
+  enrolledAt      DateTime                 @default(now())
+  completedAt     DateTime?
+  lockedAt        DateTime?
+  error           String?
+
+  workflow        Workflow                 @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  contact         Contact                  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  executions      WorkflowExecution[]
+
+  @@unique([workflowId, contactId])
+  @@index([workflowId, status])
+  @@index([contactId])
+  @@index([status, nextExecutionAt])
+}
+
+model WorkflowExecution {
+  id           String                  @id @default(cuid())
+  enrollmentId String
+  stepId       String
+  status       WorkflowExecutionStatus @default(PENDING)
+  executedAt   DateTime?
+  error        String?
+  retryCount   Int                     @default(0)
+  metadata     Json?
+
+  enrollment   WorkflowEnrollment      @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  step         WorkflowStep            @relation(fields: [stepId], references: [id], onDelete: Cascade)
+
+  @@index([enrollmentId])
+  @@index([stepId])
+  @@index([status])
 }
 
 // ==========================================
@@ -293,4 +427,88 @@ model BrandVoice {
 
   @@index([workspaceId])
 }
+
+// ==========================================
+// DELIVERABILITY & SENDING DOMAIN MODELS
+// ==========================================
+
+model SendingDomain {
+  id                   String          @id @default(cuid())
+  workspaceId          String
+  domain               String
+  status               DomainStatus    @default(PENDING)
+  spfStatus            DnsRecordStatus @default(PENDING)
+  dkimStatus           DnsRecordStatus @default(PENDING)
+  dmarcStatus          DnsRecordStatus @default(PENDING)
+  customTrackingStatus DnsRecordStatus @default(PENDING)
+  trackingSubdomain    String?         @default("track")
+  dkimSelector         String          @default("mailo")
+  healthScore          Int             @default(50)
+  lastVerifiedAt       DateTime?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  workspace     Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  dnsRecords    DomainDnsRecord[]
+  healthHistory DomainHealthHistory[]
+
+  @@unique([workspaceId, domain])
+  @@index([workspaceId])
+  @@index([domain])
+}
+
+model DomainDnsRecord {
+  id            String           @id @default(cuid())
+  domainId      String
+  recordType    DnsRecordType
+  name          String
+  expectedValue String
+  actualValue   String?
+  status        DnsRecordStatus  @default(PENDING)
+  purpose       DnsRecordPurpose
+  lastCheckedAt DateTime?
+  errorMessage  String?
+
+  domain SendingDomain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+
+  @@index([domainId])
+}
+
+model DeliverabilityCheck {
+  id          String                  @id @default(cuid())
+  workspaceId String
+  campaignId  String?
+  subject     String
+  score       Int
+  riskLevel   DeliverabilityRiskLevel @default(LOW)
+  issues      Json                    @default("[]")
+  suggestions Json                    @default("[]")
+  createdAt   DateTime                @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  campaign  Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId])
+  @@index([campaignId])
+}
+
+model DomainHealthHistory {
+  id             String        @id @default(cuid())
+  domainId       String
+  healthScore    Int
+  spfOk          Boolean       @default(false)
+  dkimOk         Boolean       @default(false)
+  dmarcOk        Boolean       @default(false)
+  trackingOk     Boolean       @default(false)
+  deliveryRate   Float?
+  bounceRate     Float?
+  complaintRate  Float?
+  recordedAt     DateTime      @default(now())
+
+  domain SendingDomain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+
+  @@index([domainId])
+  @@index([recordedAt])
+}
+
 
